@@ -9,7 +9,8 @@ def sort_by_points(e):
   
 class Game(models.Model):
     name = models.CharField(max_length=64)
-    image = models.URLField('Img source url')
+    image = models.URLField('Image source URL')
+    slug = models.SlugField('Short name for the game')
     
     def serialize(self):
         return {
@@ -78,12 +79,13 @@ class Match(models.Model):
     start_at = models.DateTimeField()
     description = models.TextField(blank=True)
     completed = models.BooleanField(default=False)
+    
     game = models.ForeignKey(Game, on_delete=models.CASCADE)
-    leaders = models.ManyToManyField('Player', related_name='leaders', through='MatchLeader')
+    leaders = models.ManyToManyField(Participant, related_name='leaders', through='MatchLeader')
     maps = models.ManyToManyField('Map', related_name='maps', through='MatchMap')
     participants = models.ManyToManyField('Player', related_name='participates_in',
                                           through=Participant)
-    
+    mvp = models.ManyToManyField(Participant, through='MatchMVPVote', related_name='mvp_votes')
     
     def serialize(self):
         return {
@@ -303,9 +305,28 @@ class Match(models.Model):
                                      result['leaders'][1]['mcoms_destroyed'])
         
         return result
+ 
         
+class MatchMap(models.Model):
+    map = models.ForeignKey(Map, on_delete=models.CASCADE)
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    
+    def __str__(self):
+        return '%s played in %s#%s' % (self.map.name, self.match.title, self.match.pk)
 
 
+class MatchLeader(models.Model):
+    player = models.ForeignKey(Participant, on_delete=models.CASCADE)      
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)   
+       
+    def __str__(self):
+        return '%s as leader in %s#%s' % (self.player.user.username, self.match.title, self.match.pk)
+
+
+class MatchMVPVote(models.Model):
+    match = models.ForeignKey(Match, on_delete=models.CASCADE)
+    player = models.ForeignKey(Participant, on_delete=models.CASCADE)
+        
 class Role(models.Model):
     '''
     Utocnik, Kulometcik, Sniper...
@@ -451,6 +472,9 @@ class TeamDraft(models.Model):
 class PlayerSession(models.Model):
     kills = models.PositiveSmallIntegerField()
     deaths = models.PositiveSmallIntegerField()
+    # video recording url
+    record_url = models.URLField(null=True)
+    
     team = models.ForeignKey(Team, on_delete=models.CASCADE, related_name='players')
     player = models.ForeignKey(Player, on_delete=models.CASCADE, related_name='sessions_played')
     role = models.ForeignKey(Role, on_delete=models.SET_NULL, related_name='role',
@@ -477,7 +501,7 @@ class PlayerSession(models.Model):
     
 class RoundSession(models.Model):
     # Map played
-    map = models.ForeignKey(Map, on_delete=models.SET_NULL, null=True)
+    map = models.ForeignKey(MatchMap, on_delete=models.SET_NULL, null=True)
     # Order no. of round in a match
     order = models.PositiveSmallIntegerField(default=1)
     screenshot = models.URLField(blank=True, null=True) # change to ImageField /scr/match.id/round.order
@@ -545,18 +569,4 @@ class RoundSession(models.Model):
         super().save(*args, **kwargs)
   
   
-class MatchMap(models.Model):
-    map = models.ForeignKey(Map, on_delete=models.CASCADE)
-    match = models.ForeignKey(Match, on_delete=models.CASCADE)
-    
-    def __str__(self):
-        return '%s played in %s#%s' % (self.map.name, self.match.title, self.match.pk)
-
-
-class MatchLeader(models.Model):
-    player = models.ForeignKey(Player, on_delete=models.CASCADE)      
-    match = models.ForeignKey(Match, on_delete=models.CASCADE)   
-       
-    def __str__(self):
-        return '%s as leader in %s#%s' % (self.player.user.username, self.match.title, self.match.pk)
 
