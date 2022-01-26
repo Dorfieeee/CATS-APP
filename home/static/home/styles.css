@@ -1,0 +1,47 @@
+html {
+    background: #36393f;
+}
+
+
+.match-status {
+    float: right;
+    display: inline-flex;
+    align-items: center;
+}
+
+#round-tab-menu {
+    flex-wrap: wrap;
+}
+
+.button[data-option] {
+    min-width: 115px !important;
+}
+
+.ui.table td.superb, .ui.table tr.superb,
+.button[data-option="join"],
+.button.active[data-option="join"],
+.button.active[data-option="join"]:hover {
+    background: #a3ffa3 !important;
+    color: #237927 !important;
+}
+
+.ui.table td.weak, .ui.table tr.weak,
+.button[data-option="leave"],
+.button.active[data-option="leave"],
+.button.active[data-option="leave"]:hover {
+    background: #ffbdbd !important;
+    color: #791b1b !important;
+}
+
+.table .utocnik,
+.table .obrance {
+    text-align: center;
+}
+
+#round-tab-menu .tab.loading {
+    min-height: 500px;
+}
+
+.ui.three.cards {
+    margin: 0 -1px;
+}

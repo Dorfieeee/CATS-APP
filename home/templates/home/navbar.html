@@ -1,0 +1,41 @@
+  <nav id="nav" class="ui top attached inverted menu">
+    <div class="ui container">
+    <a href="{% url 'home:dashboard' %}" class="item">
+      <i class="home icon"></i> Dashboard
+    </a>
+    <a href="{% url 'matches:match-list' %}" class="item">
+      <i class="play circle icon"></i> Zapasy
+    </a>
+    {% if user.is_authenticated %}
+    <div class="right menu">
+      <div class="ui simple dropdown item">
+        Moznosti <i class="dropdown icon"></i>
+        <div class="menu">
+          <a class="item">
+            <img class="ui mini circular image" style="max-width: none;" src="{{ user.avatar_url }}">
+            <span>{{ user.username }}</span>
+          </a>
+          <a class="item" href="{% url 'ucet:logout' %}">
+            <i class="sign-out icon"></i> Odhlasit se
+          </a>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+  </nav>
+<script>
+
+  document.addEventListener('DOMContentLoaded', setActiveNavlink)
+
+  function setActiveNavlink() {
+    // if link's href == location.pathname => make it active
+    $('#nav a.item').each(function() {
+      if ($(this).attr('href') === window.location.pathname) {
+        return $(this).addClass('active')
+      }
+      $(this).removeClass('active')
+    })
+  }
+
+</script>

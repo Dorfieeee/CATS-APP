@@ -1,0 +1,7 @@
+*.sqlite3
+__pycache__
+*.swp
+.DS_Store
+github_settings.py
+*.pyc
+node_modules

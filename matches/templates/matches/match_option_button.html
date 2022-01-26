@@ -1,0 +1,11 @@
+
+    <div class="ui vertical button" tabindex="0" data-id={{match.pk}} data-target="match" data-action="cd match"
+        data-option={% if match in user.all_matches %}'leave'{% else %}'join'{% endif %}>
+        <div class="visible content">
+            {% if match in user.all_matches %}
+            Odhlásit
+            {% else %}
+            Přihlásit
+            {% endif %}
+        </div>
+    </div>

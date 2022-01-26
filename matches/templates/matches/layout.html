@@ -1,0 +1,14 @@
+{% extends 'home/layout.html' %}
+
+{% load static %}
+
+{% block title %}{{ block.super }}{% endblock title %}
+
+{% block content %}
+    {{ block.super }}
+    <div class="ui right top attached menu">
+        {% block submenu %}{% endblock submenu %}
+      </div>
+    {% csrf_token %}
+    <script src="{% static 'matches/js/matches.js' %}"></script> 
+{% endblock content %}

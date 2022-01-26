@@ -1,0 +1,17 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        {% include "home/head.html" %}
+        <title>{% block title %}{% endblock title %} | CATS</title>
+    </head>
+    {% include "home/navbar.html" %}
+    <body class="ui">
+        <div class="ui bottom attached segment">
+            <main class="ui container">
+                {% block content %}{% endblock content %}
+            </main>
+        </div>
+        {% include "home/scripts.html" %}
+    </body>
+</html>

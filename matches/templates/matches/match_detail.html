@@ -1,0 +1,271 @@
+{% extends 'matches/layout.html' %}
+
+{% load static %}
+
+{% block title %}{{ match.title }}#{{ match.pk }}{% endblock title %}
+
+{% block submenu %}
+  <a href="javascript:window.history.back();" class="item" onclick="">
+    <i class="chevron left icon"></i>
+    Zpět
+  </a>
+  <div class="right menu">
+    <a href="{% url 'matches:match-update' match.id %}" class="ui item">
+      <i class="edit icon"></i>
+      Uprav zápas
+    </a>
+    {% if not match.completed %}
+      <a class="ui item" style="padding: 0 5px;">
+      {% include 'matches/match_option_button.html' with match=match %}
+      </a>
+    {% endif %}
+  </div>
+{% endblock submenu %}
+
+{% block content %}
+  {{ block.super }}
+  <h1>{{ extra }}</h1>
+  <div class="ui bottom attached segment">
+    {% comment %} TOP BANNER {% endcomment %}
+  <h2 class="ui center aligned icon header">
+      <i class="circular trophy icon"></i>
+      {{ match }}
+  </h2>
+  {% comment %} MATCH INFO PANEL {% endcomment %}
+  <div class="ui top attached segment">
+    <div class="ui blue ribbon label">Info</div>
+    <div class="match-status"></div>
+    <div class="ui divided horizontal list">
+      <div class="item">
+        {{ match.game }}
+      </div>
+      <div class="item">
+        {{ match.start_at }}
+      </div>
+    </div>
+    <div>
+    </div>
+  </div>
+
+  
+  {% if not match.completed %}
+    {% comment %} UCASTNICI {% endcomment %}
+    <div class="ui mini attached horizontal avatar-list list segment">
+        <div class="ui blue ribbon label">Účastníci</div> 
+        {% for player in match.participants.all %}
+        <div class="item">
+            <img class="ui avatar image" src="{{ player.user.avatar_url }}">
+            <div class="content">
+              <div class="header">{{ player }}</div>
+            </div>
+          </div>
+        {% endfor %}
+    </div>
+    {% comment %} LEADER LIST {% endcomment %}
+    <div class="ui mini attached horizontal avatar-list list segment">
+      <span class="ui blue ribbon label">Velitelé</span>
+      {% for leader in match.leaders.all %}
+      <div class="item">
+          <img class="ui avatar image" src="{{ leader.user.avatar_url }}">
+          <div class="content">
+            <div class="header">{{ leader.user.username }}</div>
+          </div>
+        </div>
+      {% endfor %}
+    </div>
+
+    {% comment %} MAP LIST {% endcomment %}
+    <div class="ui attached segment">
+      <span class="ui blue ribbon label">Mapy</span>
+      <div class="ui relaxed horizontal list">
+        {% for map in match.maps.all %}
+        <div class="item">
+          <img class="ui tiny image" src="{{ map.img }}">
+          <div class="content">
+            <a class="header">{{ map.name }}</a>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+
+      {% comment %} DESCRIPTION {% endcomment %}
+      <p class="ui bottom attached segment">
+        <span class="ui blue ribbon label">Popis</span>
+        {{ match.description }}
+      </p>
+  {% else %}
+      {% if match.results %}
+      {% comment %} MATCH RESULTS {% endcomment %}
+      <div class="ui attached segment">
+        <span class="ui blue ribbon label">Výsledek</span>
+        <div class="ui statistics" style="justify-content: center;">
+
+          {% for leader in match.results.leaders %}
+            {% if forloop.first %}
+              <div class="ui statistic">
+                <div class="label">
+                  <img src="{{ leader.player.user.avatar_url }}" class="ui circular inline tiny image">
+                  {{ leader.player }}
+                </div>
+              </div>
+              <div class="ui statistic">
+                <div class="value">
+                  <span {% if leader.player == match.results.winner %}style="color: #28c228;"{% elif leader.player == match.results.loser %}style="color: #d21a1a;"{% endif %}>{{ leader.points }}</span> : 
+                
+            {% endif %}
+            {% if forloop.last %}
+                  <span {% if leader.player == match.results.winner %}style="color: #28c228;"{% elif leader.player == match.results.loser %}style="color: #d21a1a;"{% endif %}>{{ leader.points }}</span>
+                </div>
+                <div class="label">{{ match.results.mcoms }}</div>
+              </div>
+              <div class="ui statistic">
+                <div class="label">
+                  {{ leader.player }}
+                  <img src="{{ leader.player.user.avatar_url }}" class="ui circular inline tiny image">
+                </div>
+              </div>
+            {% endif %}
+          {% endfor %}
+
+        </div>
+      </div>
+      {% endif %}
+  {% endif %}
+
+  {% if match.is_past_start %}
+    {% comment %} TAB MENU {% endcomment %}
+    <div id='round-tab-menu' class="ui top attached tabular menu">
+      {% comment %} SCOREBOARD - active {% endcomment %}
+      <a class="item active" data-tab="scoreboard" tabindex="0">
+          Scoreboard
+      </a>
+      {% comment %} ROUND TABS {% endcomment %}
+      {% for round in match.rounds.all %}
+      <a class="item" data-target="round" data-order="{{ round.order }}" tabindex="0"
+        data-action="get round" data-tab="{{ round.order }}" data-id={{match.pk}}>
+          #{{ round.order }}&nbsp;<span>{{ round.map }}</span>
+      </a>
+      {% endfor %}
+      {% comment %} ADD ROUND TAB {% endcomment %}
+      {% if not match.completed %}
+      <a class="item" data-tab="add round" tabindex="0">
+        Přidat kolo
+      </a>
+      {% endif %}
+    </div>
+
+    {% if match.get_players_results %}
+      {% comment %} VYSLEDKOVA TABULE {% endcomment %}
+      <div class="ui bottom attached tab segment" data-tab="scoreboard">
+        <table class="ui compact celled table">
+          <thead>
+            <tr>
+              <th>Prezdivka</th>
+              <th>Zabiti</th>
+              <th>KD</th>
+              <th>KD +/-</th>
+              <th>KPM</th>
+              <th>KPM +/-</th>
+            </tr>
+          </thead>
+          <tbody>
+            
+            {% comment %} PLAYERS RESULTS {% endcomment %}
+            {% for row in match.get_players_results %}
+              <tr>
+                {% comment %} Prezdivka {% endcomment %}
+                <td>
+                  <h4 class="ui image header">
+                    <img src="{{ row.player.user.avatar_url }}" class="ui mini rounded image">
+                    <div class="content">
+                      
+                      {% if forloop.counter == 1 %}<em data-emoji="first_place"></em>{% endif %}
+                      {% if forloop.counter == 2 %}<em data-emoji="second_place"></em>{% endif %}
+                      {% if forloop.counter == 3 %}<em data-emoji="third_place"></em>{% endif %}
+                      {{ row.player }} 
+                    </div>
+                  </h4>
+                </td>
+                {% comment %} Zabiti {% endcomment %}
+                <td>
+                  {{ row.kills }}
+                </td>
+                {% comment %} KD {% endcomment %}
+                <td
+                class=
+                {% if row.kd_delta > 0.30 %}
+                  "superb"
+                {% elif row.kd_delta > 0.15 %}
+                  "positive"
+                {% elif row.kd_delta < -0.30 %}
+                  "weak"
+                {% elif row.kd_delta < -0.15 %}
+                  "negative"
+                {% endif %}
+                >
+                  {{ row.kd }}
+                </td>
+                {% comment %} KD +- {% endcomment %}
+                <td>
+                  {% if row.kd_delta == 0 %}N/A{% else %}{{ row.kd_delta }}{% endif %}
+                </td>
+                {% comment %} KPM {% endcomment %}
+                <td
+                class=
+                {% if row.kpm_delta > 0.30 %}
+                  "superb"
+                {% elif row.kpm_delta > 0.15 %}
+                  "positive"
+                {% elif row.kpm_delta < -0.30 %}
+                  "weak"
+                {% elif row.kpm_delta < -0.15 %}
+                  "negative"
+                {% endif %}
+                >
+                  {{ row.kpm }}
+                </td>
+                {% comment %} KPM +- {% endcomment %}
+                <td>
+                  {% if row.kpm_delta == 0 %}N/A{% else %}{{ row.kpm_delta }}{% endif %}
+                </td>
+                        
+              </tr>
+            {% endfor %}
+            
+          </tbody>
+        </table>
+      </div>
+      {% comment %} ROUND TAB CONTENT {% endcomment %}
+      {% for round in match.rounds.all %}
+      <div class="ui bottom attached tab segment" data-id="{{ match.pk }}" data-order="{{ round.order }}" data-tab="{{ round.order }}"></div>
+      {% endfor %}
+      {% if not match.completed %}
+      {% comment %} ADD ROUND TAB {% endcomment %}
+      <div class="ui bottom attached tab segment" data-tab="add round" data-id="{{ match.pk }}"></div>
+      {% endif %}
+    {% else %}
+      {% comment %} EMPTY {% endcomment %}
+      <div class="ui bottom attached active tab segment" data-tab="scoreboard">
+        <div class="ui placeholder segment">
+          <div class="ui icon header">
+            <i class="icon">
+              <i class="tiny icons">
+                <i class="file outline icon"></i>
+                <i class="red dont icon"></i>
+              </i>
+            </i>
+            Zatím nejsou žádná data pro tuto událost.
+          </div>
+        </div> 
+      </div>
+      {% comment %} ADD ROUND TAB {% endcomment %}
+      {% if not match.completed %}
+      <div class="ui bottom attached tab segment" data-tab="add round" data-id="{{ match.pk }}"></div>
+      {% endif %}
+
+    {% endif %}
+  {% endif %}
+  </div> 
+  <script src="{% static 'matches/js/matches_detail.js' %}"></script>
+{% endblock content %}

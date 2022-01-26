@@ -1,0 +1,17 @@
+{% extends 'home/layout.html' %}
+
+<head>
+    {% include 'home/head.html' %}
+    {% block title %}Prihlaseni se nezdarilo{% endblock title %}
+</head>
+
+{% block content %}
+
+<h1>Nepodarilo se prihlasit!</h1>
+
+<p>
+    Aby ses mohl prihlasit, tak se napred musis stat radnym clenem skupiny CATS.
+    Anebo se neco proste pokazilo, tak to prosim zkus to znova.
+</p>
+
+{% endblock content %}

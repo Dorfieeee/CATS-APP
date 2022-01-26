@@ -1,0 +1,3 @@
+{
+    "python.defaultInterpreterPath": "~/.virtualenvs/django4/bin/python"
+}

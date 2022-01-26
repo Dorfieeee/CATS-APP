@@ -1,0 +1,58 @@
+{% extends 'matches/layout.html' %}
+{% load static %}
+
+{% block title %}Seznam zapasu{% endblock title %}
+
+{% block submenu %}
+    <a href="{% url 'matches:match-list' %}" class="item active">
+      Aktuální
+    </a>
+    <div class="right menu">
+      <a href="{% url 'matches:match-create' %}" class="ui item">
+        <i class="ui plus circle icon"></i>
+        Vytvoř zápas
+      </a>
+    </div>
+{% endblock submenu %}
+
+{% block content %}
+{{ block.super }}
+    
+<div class="ui three cards bottom attached segment">
+    {% for match in match_list %}
+    <div class="card">
+      <div class="content">
+        <img class="right floated mini ui image" src="{{ match.game.image_url }}">
+        <a class="header" href="{% url 'matches:match-detail' match.id %}">
+          {{ match.title }}
+        </a>
+        <div class="meta">
+          {{ match.start_at }}
+        </div>
+        <div class="description">
+          {{ match.description }}
+        </div>
+      </div>
+      <div class="content">
+        <div class="ui label"><i class="users icon"></i>&nbsp;<span>{{ match.participants.count }}</span></div>
+        <div class="ui label"><i class="gamepad icon"></i> {{ match.game.name }}</div>
+      </div>
+      <div class="extra content">
+        <div class="ui ui bottom attached two buttons">
+        {% if not match.completed %}
+          {% include 'matches/match_option_button.html' with match=match %}
+        {% endif %}
+        <div class="ui grey right floated animated button" tabindex="0" onclick="window.location='{% url 'matches:match-detail' match.id %}'; false;">
+            <div class="visible content">Detaily</div>
+            <div class="hidden content">
+              <i class="right arrow icon"></i>
+            </div>
+        </div>
+        </div>
+      </div>
+    </div>
+    {% endfor %}
+</div>
+
+{% comment %} <script src="{% static 'matches/js/match_list.js' %}" ></script> {% endcomment %}
+{% endblock content %}

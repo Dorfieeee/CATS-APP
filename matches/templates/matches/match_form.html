@@ -1,0 +1,87 @@
+{% extends 'matches/layout.html' %}
+
+{% load static %}
+
+{% block title %}Vytvoř zápas{% endblock title %}
+
+{% block submenu %}
+<a href="javascript:window.history.back();" class="item" onclick="">
+  <i class="chevron left icon"></i>
+  Zpět
+</a>
+{% endblock submenu %}
+
+{% block content %}
+  {{ block.super }}
+    <div class="ui bottom attached segment">
+    <h1 class="ui header">Create/Update Form</h1>
+    
+    {% if form.errors %}
+      {% for field in form %}
+
+           {% for error in field.errors %}
+                {{field.label}}: {{ error|escape }}
+           {% endfor %}
+
+      {% endfor %}
+    {% endif %} 
+
+    <form class="ui form" method="POST">
+        {% csrf_token %}
+        {% for field in form %}
+        {% if field.html_name == 'start_at' %}
+        <div class="ui calendar field" id="standard_calendar">
+            {{ field.label_tag }}
+            <div class="ui input left icon">
+              <i class="calendar icon"></i>
+              <input name="{{field.html_name}}" type="text" placeholder="YYYY-MM-DD HH-MM-SS" value="{{ field.value }}">
+            </div>
+          </div>
+        {% else %}
+        <div class="field">
+            {{ field.label_tag }}
+            {{ field }}
+        </div>
+        {% endif %}
+        {% endfor %}
+        <button class="ui primary submit button" type="submit"><i class="save icon"></i>Ulož</button>
+      </form>
+    </div>
+      <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // init form
+            $('.ui.form').form()
+            // init calendar
+            $('#standard_calendar')
+                .calendar({
+                    formatter: {
+                        date: function (date, settings) {
+                            if (!date) return '';
+                            var day = date.getDate();
+                            var month = date.getMonth() + 1;
+                            var year = date.getFullYear();
+                            return year + '-' + month + '-' + day;
+                        },
+                        time: function (date, settings) {
+                            if (!date) return '';
+                            var second = date.getSeconds();
+                            var minute = date.getMinutes();
+                            var hour = date.getHours();
+                            return format(hour) + ':' + format(minute) + ':' + format(second);
+                        }
+                      }
+                })
+            // turn off calendar autoselect!
+            $('#standard_calendar input').attr('autocomplete', 'off')
+            // select Battlefield 4 as default
+            let gameSelect = $('.ui.form select[name="game"]')
+            gameSelect.val() || gameSelect.val("1")
+            
+                
+            function format(n) {
+                return n < 10 ? `0${n}` : n
+            }
+        })
+      </script>
+
+{% endblock content %}

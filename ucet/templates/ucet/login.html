@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% include 'home/head.html' %}
+    {% block title %}Prihlaseni{% endblock title %}
+</head>
+<body style="background-color: #202122;">
+    <div style="display: grid;
+                height: 100%;
+                width: 100%;
+                align-content: center;
+                justify-content: center;"
+    >
+        <div class="ui card" style="background-color: #36393f; width: 100%; max-width: 350px; padding: 1rem;">
+            <div class="image" style="background-color: unset">
+                <img src="https://i.ibb.co/jDT4H7W/cats-logo.png">
+            </div>
+            <div class="content">
+                <a class="header" style="color: #f0f0f0;  text-align: center;">Přihlášení do členské zóny</a>
+                <div class="description" style="color: #f0f0f0; text-align: center;">
+                    <p>
+                    Přihlásit se půjde pouze řádným členům skupiny CATS
+                    </p>
+                    <p>
+                        Po stisknutí budete přesměrování na přihlašovací stránku Discordu.
+                    </p>
+                </div>
+            </div>
+            <div class="extra content">
+                <form class="ui large form" action="{% url 'ucet:login' %}" method="POST" >
+                    {% csrf_token %}
+                    <button type="submit" class="ui fluid large submit button" style="background-color: #00417e; color: white;">Přihlásit se</button>
+                </form> 
+            </div>
+        </div>
+    </div>  
+</body>
+{% include 'home/scripts.html' %}
+</html>
