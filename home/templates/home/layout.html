@@ -3,11 +3,12 @@
 <html lang="en">
     <head>
         {% include "home/head.html" %}
+        {% block head %}{% endblock head %}
         <title>{% block title %}{% endblock title %} | CATS</title>
     </head>
     {% include "home/navbar.html" %}
     <body class="ui">
-        <div class="ui bottom attached segment">
+        <div class="ui top attached">
             <main class="ui container">
                 {% block content %}{% endblock content %}
             </main>

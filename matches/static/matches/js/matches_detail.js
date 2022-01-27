@@ -1,4 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
+    const PLAYER_REGEX = /^(\w+)\[(\d+)\]\[(\d+)\]$/,
+          LEADER_REGEX = /^(leader)\[(\d+)\]$/,
+          $FORM_TAB = $('.tab[data-tab="add round"]')
+    
     initTabs()
 
     function initTabs() {
@@ -188,7 +192,7 @@ document.addEventListener('DOMContentLoaded', () => {
     function initRoundForm(response) {
         // create and render form
         // class="ui bottom attached tab segment" data-tab="add round"
-        $('.ui.tab.segment[data-tab="add round"]').html(createRoundForm())
+        $FORM_TAB.html(createRoundForm())
         
         const 
             $teamCnt    = (side) => $(`.field[data-team=${side}]`),
@@ -207,7 +211,7 @@ document.addEventListener('DOMContentLoaded', () => {
         })
 
         // when user changes leader, reset team field
-        $('input[name^="leader"] + .dropdown.search').change(resetTeamOnChangeHandler)
+        $('input[name^="leader"] + .search.dropdown').change(resetTeamOnChangeHandler)
 
         // when user changes map, change max for mcoms input and its label
         $('select.dropdown.search[data-map]').change(mcomsMaxOnChangeHandler)
@@ -267,6 +271,46 @@ document.addEventListener('DOMContentLoaded', () => {
                 });
             },
         })
+        // initialize draggable sortable
+        $( function() {
+            $( "#attackers, #defenders" ).sortable({
+                connectWith: ".teamPlayers",
+                receive: function( event, ui ) {
+                    let item = $(ui.item[0]),
+                        receiver = item.parent(),
+                        sender = $(ui.sender[0])
+                    
+                    // loop through team container
+                    Array(receiver, sender).forEach(function reindexFields(team) {
+                        // when received => change in teams => reset both team values
+                        resetTeamOnChangeHandler(null, team)
+                        
+                        const teamIndex = team.data('team')
+                        // loop through fields
+                        team.children().each(function () {
+                            const fieldIndex = $(this).index()
+                            // loop through field's inputs
+                            // change their names and update form's state
+                            // name=value[teamIndex][fieldIndex]
+                            $(this).find('input[name]').each(function (i, el) {
+                                // remove curr field name from form state
+                                $form.form('remove field', el.name)
+                                let newName = el.name
+                                .replace(PLAYER_REGEX, (m, p1) => (
+                                    `${p1}[${teamIndex}][${fieldIndex}]`
+                                ))
+
+                                // change field's name
+                                el.name = newName
+                                // add new field's name into form state
+                                $form.form('add field', [newName], intNotEmpty)
+                            })
+
+                        })
+                    })
+                }
+            }).disableSelection();
+        } );
         
         function displayMessage(msg) {
             let list = [msg].flat().map(m => `<li>${m}</li>`).join("")
@@ -360,7 +404,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 selected: team,
             },
             leadOptions = {
-                list: response.participants,
+                list: response.leaders,
                 valueField: "player_pk",
                 contentField: "name",
                 selected: lead,
@@ -368,7 +412,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
             return (`    
-                <div class="column">
+                <div class="column" data-team=${side}>
                     <h4 class="ui dividing header">${side ? "Obránci" : "Útočníci"}</h4>
                     <!-- Team details -->
                     <div class="field">
@@ -394,7 +438,13 @@ document.addEventListener('DOMContentLoaded', () => {
                         </div>
                     </div>
                     <!-- Players details -->
-                    <div class="field" data-team=${side}>
+                    <div class="four fields">
+                        <div class="six wide field"><label>Hráč</label></div>
+                        <div class="four wide field"><label>Role</label></div>
+                        <div class="three wide field"><label>K</label></div>
+<div class="three wide field"><label>D</label></div>
+                    </div>
+                    <div id="${side ? "defenders" : "attackers"}" class="teamPlayers field" data-team=${side}>
 
                     </div>
                     <!-- Add another player btn -->
@@ -436,27 +486,23 @@ document.addEventListener('DOMContentLoaded', () => {
                     contentField: "name",
                 },
                 t = (`
-                    <div class="four fields">
+                    <div class="four fields ${s ? "defenderOrigin" : "attackerOrigin"}">
                         <div class="six wide field">
-                            ${!i ? "<label>Hráč</label>" : ""}
                             <input type="hidden" name="${p}" value="${player?.player_pk}">
                             <select class="ui search dropdown" tabindex="-1">
                             ${generateOptions(p_options)}
                             </select>
                         </div>
                         <div class="four wide field">
-                            ${!i ? "<label>Role</label>" : ""}
                             <input type="hidden" name="${r}" value="1">
                             <select class="ui search dropdown" tabindex="-1">
                             ${generateOptions(r_options)}
                             </select>
                         </div>
                         <div class="three wide field">
-                            ${!i ? "<label>K</label>" : ""}
                             <input type="number" name="${k}" min="0">
                         </div>   
                         <div class="three wide field">
-                            ${!i ? "<label>D</label>" : ""}
                             <input type="number" name="${d}" min="0">
                         </div>
                     </div>
@@ -464,6 +510,7 @@ document.addEventListener('DOMContentLoaded', () => {
     
             c.append(t)
     
+    		// add into form's state
             Array(p, r, k, d).forEach(field => {
                 f.form('add field', [field], intNotEmpty)
             })
@@ -477,11 +524,13 @@ document.addEventListener('DOMContentLoaded', () => {
             return c // return the container it was appended into
         }
         
-        function resetTeamOnChangeHandler(e) {
-            let team     = $(e.target).data('team')
-            let dropdown = $(`input[name="team[${team}]"] + .dropdown.search`)
-            let input    = dropdown.siblings('input')
-
+        function resetTeamOnChangeHandler(e, el) {
+        	let 
+            target	 = el || $(e.target),
+            team     = target.closest('[data-team]').data('team'),
+            dropdown = $(`input[name="team[${team}]"] + .dropdown.search`),
+            input    = dropdown.siblings('input')
+			
             dropdown.val('')
             input.val('')
         }
@@ -489,9 +538,8 @@ document.addEventListener('DOMContentLoaded', () => {
         function fieldsToJSON(data) {
             const ATT = "attackers",
                 DEF = "defenders",
-                LDR = "leader",
-                PLAYER_REGEX = /^(\w+)\[(\d+)\]\[(\d+)\]$/,
-                LEADER_REGEX = /^(leader)\[(\d+)\]$/
+                LDR = "leader"
+
     
             return Object.keys(data).reduce((o, key) => {
     
@@ -547,12 +595,15 @@ document.addEventListener('DOMContentLoaded', () => {
         function initDropdowns() {
             $(".ui.search.dropdown").unbind("change", dropdownHandler)
             $(".ui.search.dropdown").bind("change", dropdownHandler)
+            // reset team value on player's change
+            $('input[name^="player"] + .search.dropdown').unbind('change', resetTeamOnChangeHandler)
+            $('input[name^="player"] + .search.dropdown').bind('change', resetTeamOnChangeHandler)
         }
     
         function generateTeamHandler(e) {
             const 
                 teamIndex   = $(e.target).data("team"),
-                teamPK      = $('.ui.form').form('get value', `team[${teamIndex}]`)
+                teamPK      = $form.form('get value', `team[${teamIndex}]`)
     
             if (!teamPK) return
     
@@ -605,7 +656,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
     function alertUser(type, msg) {
-        $('main.content')
+        $('body')
             .toast({
                 class: type,
                 message: msg,

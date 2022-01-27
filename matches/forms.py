@@ -1,18 +1,13 @@
 from django.forms import ModelForm, TextInput, Textarea, CheckboxInput, Select
 from .models import Match
 
-
-class MatchCreateForm(ModelForm):
-    class Meta:
-        model = Match
-        fields = ['title', 'start_at', 'description', 'completed', 'maps', 'leaders', 'game', 'participants']
-        widgets = {
+widgets = {
             'title': TextInput(attrs={
                 'placeholder': 'Jméno události',
                 'value': 'CATS CUP',
             }),
             'start_at': TextInput(attrs={
-                'placeholder': 'Datum time [YYYY-MM-DD HH-MM-SS]',
+                'placeholder': 'Datum cas [YYYY-MM-DD HH-MM-SS]',
                 'autocomplete': 'off',
             }),
             'description': Textarea(attrs={
@@ -26,3 +21,15 @@ class MatchCreateForm(ModelForm):
             }),
         }
 
+
+class MatchCreateForm(ModelForm):
+    class Meta:
+        model = Match
+        fields = ['title', 'start_at', 'description', 'completed', 'maps', 'game']
+        widgets = widgets
+
+class MatchUpdateForm(ModelForm):
+    class Meta:
+        model = Match
+        fields = ['title', 'start_at', 'description', 'completed', 'maps', 'leaders', 'participants', 'game']
+        widgets = widgets

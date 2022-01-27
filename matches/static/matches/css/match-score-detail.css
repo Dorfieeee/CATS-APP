@@ -1,0 +1,171 @@
+/* ------------ MATCH FORM ------------ */
+.attackerOrigin,
+.defenderOrigin {
+    border-width: 5px;
+    padding: 0;
+    border-radius: 5px;
+    border-style: solid;
+    cursor: pointer;
+}
+
+.teamPlayers {
+    border-width: 3px;
+    border-style: dashed;
+    padding: 1rem;
+}
+
+#attackers.teamPlayers {
+    border-color: #de7e7e;
+}
+
+#defenders.teamPlayers {
+    border-color: #679cca;
+}
+
+.attackerOrigin {
+    border-color: #de7e7e;
+    background-color: #de7e7e;
+}
+
+.defenderOrigin {
+    border-color: #679cca;
+    background-color: #679cca;
+}
+
+/* ------------ MATCH SCORE ------------*/
+.matchScore {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+  
+  .player {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .player img {
+    width: 35px;
+    height: auto;
+    border-radius: 50%;
+  }
+  
+  .label {
+    align-self: center;
+    padding: 5px;
+    font-weight: 600;
+    font-size: 12px;
+  }
+  
+  .score {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+    padding: 0 5px;
+  }
+  
+  .score>div {
+    display: flex;
+    flex-direction: column;
+  }
+  
+  .score div:nth-child(1) {
+    text-align: right;
+  
+  }
+  
+  .score div:nth-child(2) {
+    text-align: center;
+    padding: 0 3px;
+  }
+  
+  .score div:nth-child(3) {
+    text-align: left;
+  }
+  
+  .score>div> :first-child {
+    font-size: 28px;
+    line-height: 28px;
+    font-weight: 600;
+  }
+  
+  .score>div> :first-child {
+    color: orange;
+  }
+  
+  .score>div:nth-child(2)>:first-child {
+    color: black;
+  }
+  
+  .score>div>.winner {
+    color: green;
+  }
+  
+  .score>div>.loser {
+    color: red;
+  }
+  
+  .score>div> :last-child {
+    font-size: 14px;
+    line-height: 14px;
+  }
+  
+  
+  @media screen and (min-width: 768px) {
+    .matchScore {
+      display: flex;
+      flex-direction: row;
+      justify-content: center;
+    }
+  
+    .player {
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+    }
+  
+    .player img {
+      width: 70px;
+      height: auto;
+      border-radius: 50%;
+    }
+  
+    .player:nth-of-type(3) {
+      flex-direction: row-reverse;
+    }
+  
+    .label {
+      align-self: center;
+      padding: 5px;
+      font-weight: 600;
+      font-size: 20px;
+    }
+  
+    .score {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 8px;
+    }
+  
+    .score>div> :first-child {
+      font-size: 48px;
+      line-height: 48px;
+      font-weight: 600;
+      margin-bottom: 1px;
+  
+    }
+  
+    .score>div> :last-child {
+      font-size: 20px;
+      line-height: 20px;
+    }
+  
+    .score div:nth-child(2) {
+      text-align: center;
+      padding: 0 5px;
+    }
+  }

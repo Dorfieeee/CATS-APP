@@ -2,6 +2,12 @@
 
 {% load static %}
 
+{% block head %}
+<link rel="stylesheet" href="{% static 'matches/css/match-score-detail.css' %}">
+{% endblock head %}
+
+
+
 {% block title %}{{ match.title }}#{{ match.pk }}{% endblock title %}
 
 {% block submenu %}
@@ -24,7 +30,6 @@
 
 {% block content %}
   {{ block.super }}
-  <h1>{{ extra }}</h1>
   <div class="ui bottom attached segment">
     {% comment %} TOP BANNER {% endcomment %}
   <h2 class="ui center aligned icon header">
@@ -66,9 +71,9 @@
       <span class="ui blue ribbon label">Velitelé</span>
       {% for leader in match.leaders.all %}
       <div class="item">
-          <img class="ui avatar image" src="{{ leader.user.avatar_url }}">
+          <img class="ui avatar image" src="{{ leader.player.user.avatar_url }}">
           <div class="content">
-            <div class="header">{{ leader.user.username }}</div>
+            <div class="header">{{ leader.player.user.username }}</div>
           </div>
         </div>
       {% endfor %}
@@ -95,45 +100,49 @@
         {{ match.description }}
       </p>
   {% else %}
-      {% if match.results %}
-      {% comment %} MATCH RESULTS {% endcomment %}
-      <div class="ui attached segment">
-        <span class="ui blue ribbon label">Výsledek</span>
-        <div class="ui statistics" style="justify-content: center;">
+      {% with match.results as results %}
+      {% if results %}
+        {% comment %} MATCH RESULTS {% endcomment %}
+        <div class="ui attached segment">
+          <span class="ui blue ribbon label">Výsledek</span>
+          <div>
 
-          {% for leader in match.results.leaders %}
-            {% if forloop.first %}
-              <div class="ui statistic">
-                <div class="label">
-                  <img src="{{ leader.player.user.avatar_url }}" class="ui circular inline tiny image">
-                  {{ leader.player }}
-                </div>
+            <div class="matchScore">
+              <div class="player">
+                  <img src="{{ results.leader_0.player.user.avatar_url }}">
+                  <div class="label">
+                    {{ results.leader_0.player }}
+                  </div>
               </div>
-              <div class="ui statistic">
-                <div class="value">
-                  <span {% if leader.player == match.results.winner %}style="color: #28c228;"{% elif leader.player == match.results.loser %}style="color: #d21a1a;"{% endif %}>{{ leader.points }}</span> : 
-                
-            {% endif %}
-            {% if forloop.last %}
-                  <span {% if leader.player == match.results.winner %}style="color: #28c228;"{% elif leader.player == match.results.loser %}style="color: #d21a1a;"{% endif %}>{{ leader.points }}</span>
-                </div>
-                <div class="label">{{ match.results.mcoms }}</div>
+              <div class="score">
+                      <div>
+                          <span {% if results.leader_0.is_winner %}class="winner"{% elif results.leader_1.is_winner %}class="loser"{% endif %}>{{ results.leader_0.points }}</span>
+                          <span>{{ results.leader_0.mcoms_destroyed }}</span>
+                      </div>
+                      <div>
+                          <span>:</span>
+                          <i class="fas fa-bomb"></i>
+                      </div>
+                      <div>
+                          <span {% if results.leader_1.is_winner %}class="winner"{% elif results.leader_0.is_winner %}class="loser"{% endif %}>{{ results.leader_1.points }}</span>
+                          <span>{{ results.leader_1.mcoms_destroyed }}</span>
+                      </div>
               </div>
-              <div class="ui statistic">
-                <div class="label">
-                  {{ leader.player }}
-                  <img src="{{ leader.player.user.avatar_url }}" class="ui circular inline tiny image">
-                </div>
+              <div class="player">
+                  <img src="{{ results.leader_1.player.user.avatar_url }}">
+                  <div class="label">
+                    {{ results.leader_1.player }}
+                  </div>
               </div>
-            {% endif %}
-          {% endfor %}
+            </div>
 
+          </div>
         </div>
-      </div>
       {% endif %}
+      {% endwith %}
   {% endif %}
 
-  {% if match.is_past_start %}
+  {% if match.is_past_start or match.completed %}
     {% comment %} TAB MENU {% endcomment %}
     <div id='round-tab-menu' class="ui top attached tabular menu">
       {% comment %} SCOREBOARD - active {% endcomment %}

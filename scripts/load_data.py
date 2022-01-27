@@ -44,6 +44,7 @@ def run():
     Role.objects.create(name="Útočník", icon_name="medkit")
     Role.objects.create(name="Sniper", icon_name="crosshairs")
     Role.objects.create(name="Radista", icon_name="wifi")
+    Role.objects.create(name="Podpora", icon_name="headset")
     log('Roles uploaded')
     
     print('Loading users...')

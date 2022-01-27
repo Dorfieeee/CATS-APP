@@ -6,8 +6,8 @@ from django.contrib.auth.mixins import LoginRequiredMixin
 from django.views import View
 from django.http import JsonResponse
 
-from .forms import MatchCreateForm
-from .models import Map, Match, Player, PlayerSession, Role, RoundSession, Team
+from .forms import MatchCreateForm, MatchUpdateForm
+from .models import Map, Match, MatchLeader, Player, PlayerSession, Role, RoundSession, Team
 # Create your views here.
 
 class MatchesList(LoginRequiredMixin, ListView):
@@ -16,18 +16,10 @@ class MatchesList(LoginRequiredMixin, ListView):
 class MatchesDetail(LoginRequiredMixin, DetailView):
     model = Match
     
-    def get(self, request, *args, **kwargs):
-        
-        self.extra_context = {'results': self.model.results}
-        
-        self.object = self.get_object()
-        context = self.get_context_data(object=self.object)
-        return self.render_to_response(context)
-    
 class MatchesCreate(LoginRequiredMixin, View):
     model = Match
     template = "matches/match_form.html"    
-    fields = ['title', 'start_at', 'description', 'completed', 'maps', 'leaders', 'game', 'participants']
+    fields = ['title', 'start_at', 'description', 'completed', 'maps', 'leaders', 'game']
 
     def get(self, request):
         form = MatchCreateForm()
@@ -125,7 +117,6 @@ class MatchDetailJSON(LoginRequiredMixin, View):
             
         data['teams'] = [t.serialize() for t in set(teams)]
         data['roles'] = [r.serialize() for r in Role.objects.all()]
-        data['maps'] = [m.serialize() for m in Map.objects.all()]
     
         response['success'] = 'true'
         response['data'] = data      
@@ -190,7 +181,7 @@ class AddRound(LoginRequiredMixin, View):
             match     = Match.objects.get(pk=pk)
             if match.rounds.count() > round_ord:
                 round_ord = match.rounds.count() + 1
-            round_map = Map.objects.get(pk=_map)
+            round_map = match.maps.get(pk=_map)
             
             round_ses = RoundSession.objects.create(map=round_map,
                                                     duration=round_dur,
@@ -201,14 +192,16 @@ class AddRound(LoginRequiredMixin, View):
             if team_att is not None and Team.objects.filter(pk=team_att).exists():
                 attackers = Team.objects.get(pk=team_att)
             else:              
-                attackers = (Team.objects.create(leader=Player.objects
-                                                    .get(pk=leader_att)))
+                leader = Player.objects.get(pk=leader_att)
+                attackers = (Team.objects.create(leader=leader,
+                                                 name="%s->Kolo#%s" % (leader, round_ord)))
                 
             if team_def is not None and Team.objects.filter(pk=team_def).exists():
                 defenders = Team.objects.get(pk=team_def)
             else:
-                defenders = (Team.objects.create(leader=Player.objects
-                                                    .get(pk=leader_def)))
+                leader = Player.objects.get(pk=leader_def)
+                defenders = (Team.objects.create(leader=leader,
+                                                 name="%s->Kolo#%s" % (leader, round_ord)))
 
             for player in players_att:
                 self.create_player_session(player, attackers, round_ses)
@@ -235,22 +228,21 @@ class AddRound(LoginRequiredMixin, View):
 class MatchesUpdate(LoginRequiredMixin, View):
     model = Match
     template = "matches/match_form.html"    
-    fields = ['title', 'start_at', 'description', 'completed', 'maps', 'leaders', 'game', 'participants']
+    fields = ['title', 'start_at', 'description', 'completed', 'maps', 'leaders', 'game']
 
 
     def get(self, request, pk):
         match = get_object_or_404(self.model, pk=pk)
-        form = MatchCreateForm(instance=match)
+        form = MatchUpdateForm(instance=match)
         ctx = {'form': form}
         return render(request, self.template, ctx)
     
     def post(self, request, pk):
         match = get_object_or_404(self.model, pk=pk)    
-        form = MatchCreateForm(request.POST, instance=match)
+        form = MatchUpdateForm(request.POST, instance=match)
         if not form.is_valid():
             ctx = {'form': form}
             return render(request, self.template, ctx)
-        print(form.cleaned_data)
         form.save()
         
         return redirect(reverse_lazy('matches:match-list'))

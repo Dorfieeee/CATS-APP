@@ -4,13 +4,10 @@ from django.utils import timezone
 from django.db import models
 from myapp.settings import AUTH_USER_MODEL
 
-def sort_by_points(e):
-    return e['points']
   
 class Game(models.Model):
     name = models.CharField(max_length=64)
     image = models.URLField('Image source URL')
-    slug = models.SlugField('Short name for the game')
     
     def serialize(self):
         return {
@@ -97,6 +94,8 @@ class Match(models.Model):
             'drafts': [d.serialize() for d in self.drafts.all()],
             'game': self.game.serialize(),
             'participants': [p.serialize() for p in self.participants.all()],
+            'leaders': [l.player.serialize() for l in self.leaders.all()],
+            'maps': [{'map_pk': m.pk, 'name': m.name, 'mcoms': m.mcoms} for m in self.maps.all()],
             'participants_count': self.participants.count(),
             'rounds_count': self.rounds.count(),
         }
@@ -260,51 +259,55 @@ class Match(models.Model):
 
     @property
     def results(self):
+        res = {}
         leaders = self.leaders.all()
         
-        if not leaders.count() == 2: return
+        if not leaders.count() == 2: return res
         
-        result = {
-            'leaders': [],
-            'winner': None,
-        }
+        players = [l.player for l in leaders]
         
-        for leader in leaders:
-            result['leaders'].append({
-                'player': leader,
-                'points': 0,
-                'mcoms_destroyed': 0,
-            })
+        for player in players:
+            if not hasattr(player, 'points'):
+                player.points = 0
+            if not hasattr(player, 'mcoms_destroyed'):
+                player.mcoms_destroyed = 0
+            if not hasattr(player, 'is_winner'):
+                player.is_winner = False
         
         rounds = self.rounds.all()
         
         for r in rounds:
             winner = r.winner.leader
-            for leader in result['leaders']:                
+            for leader in players:  
                 # Add one point if leader won the round
-                if winner == leader['player']:
-                    leader['points'] = leader['points'] + 1
+                if leader == winner:
+                    leader.points = leader.points + 1
                 # Add points for destroyed mcoms to attacking team
-                if leader['player'] == r.attackers.leader:
-                    leader['mcoms_destroyed'] = \
-                        leader['mcoms_destroyed'] + r.mcoms_destroyed     
+                if leader == r.attackers.leader:
+                    leader.mcoms_destroyed = leader.mcoms_destroyed + r.mcoms_destroyed
         
         # If leader has more points => winner, opposite loser, otherwise
         # no changes made => draw
-        if result['leaders'][0]['points'] > result['leaders'][1]['points']:
-            result['winner'] = result['leaders'][0]['player']
-            result['loser'] = result['leaders'][1]['player']
-        elif result['leaders'][0]['points'] < result['leaders'][1]['points']:
-            result['winner'] = result['leaders'][1]['player']
-            result['loser'] = result['leaders'][0]['player']
-
-        # let winner be always the first in the list
-        result['leaders'].sort(key=sort_by_points, reverse=True)
+        if players[0].points > players[1].points:
+            players[0].is_winner = True
+        elif players[0].points < players[1].points:
+            players[1].is_winner = True
         
-        result['mcoms'] = "%s : %s" % (result['leaders'][0]['mcoms_destroyed'],
-                                     result['leaders'][1]['mcoms_destroyed'])
-        
-        return result
+        key = ""
+        for leader in players:
+            if not leader.is_winner and not key == 'leader_1':
+                key = 'leader_1'
+            else:
+                key = 'leader_0'
+                
+            res[key] = {
+                'player': leader,
+                'points': leader.points,
+                'mcoms_destroyed': leader.mcoms_destroyed,
+                'is_winner': leader.is_winner,
+            }
+            
+        return res
  
         
 class MatchMap(models.Model):
@@ -312,7 +315,7 @@ class MatchMap(models.Model):
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
     
     def __str__(self):
-        return '%s played in %s#%s' % (self.map.name, self.match.title, self.match.pk)
+        return self.map.__str__()
 
 
 class MatchLeader(models.Model):
@@ -326,6 +329,7 @@ class MatchLeader(models.Model):
 class MatchMVPVote(models.Model):
     match = models.ForeignKey(Match, on_delete=models.CASCADE)
     player = models.ForeignKey(Participant, on_delete=models.CASCADE)
+        
         
 class Role(models.Model):
     '''
@@ -441,10 +445,9 @@ class Team(models.Model):
             'pk': self.pk,
             'leader': self.leader.serialize(),
             'players': [p.serialize() for p in players],
-            'name': str(self.leader) + "#" + str(self.pk),
+            'name': self.__str__(),
         }
     
-    # add methods to sum players kills and deaths?
     def __str__(self):
         if self.name: return self.name
         return "%s# %s @ %s/%s" % (self.pk, self.leader, self.created.day, self.created.month)   
@@ -501,7 +504,7 @@ class PlayerSession(models.Model):
     
 class RoundSession(models.Model):
     # Map played
-    map = models.ForeignKey(MatchMap, on_delete=models.SET_NULL, null=True)
+    map = models.ForeignKey(Map, on_delete=models.SET_NULL, null=True)
     # Order no. of round in a match
     order = models.PositiveSmallIntegerField(default=1)
     screenshot = models.URLField(blank=True, null=True) # change to ImageField /scr/match.id/round.order

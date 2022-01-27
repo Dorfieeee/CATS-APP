@@ -1,7 +1,22 @@
 html {
     background: #36393f;
+    font-family: 'Poppins', sans-serif !important;
 }
 
+body {
+    background-image: url(https://hdqwalls.com/wallpapers/battlefield-4.jpg);
+    background-repeat: no-repeat;
+    background-position: center;
+    background-size: cover;
+}
+
+body>nav ~ .ui.bottom.attached.segment {
+    background-clip: content-box;
+}
+
+#nav {
+    margin-bottom: 1rem;
+}
 
 .match-status {
     float: right;
